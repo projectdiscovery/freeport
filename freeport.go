@@ -6,6 +6,32 @@ import (
 	"net"
 )
 
+// GetFreePortOnInterface by name and protocol
+func GetFreePortOnInterface(interfaceName string, protocol Protocol) (*Port, error) {
+	itf, err := net.InterfaceByName(interfaceName)
+	if err != nil {
+		return nil, err
+	}
+	addresses, err := itf.Addrs()
+	if err != nil {
+		return nil, err
+	}
+	for _, address := range addresses {
+		switch protocol {
+		case UDP:
+			if port, err := GetFreeUDPPort(address.String()); err == nil {
+				return port, nil
+			}
+		default:
+			if port, err := GetFreeTCPPort(address.String()); err == nil {
+				return port, nil
+			}
+		}
+	}
+	return nil, fmt.Errorf("couldn't find any free port on interface %s", interfaceName)
+}
+
+// GetFreePort from ip address and protocol
 func GetFreePort(address string, protocol Protocol) (*Port, error) {
 	switch protocol {
 	case UDP:
@@ -15,6 +41,7 @@ func GetFreePort(address string, protocol Protocol) (*Port, error) {
 	}
 }
 
+// GetFreePorts collects "count" free ports of specific protocol
 func GetFreePorts(address string, protocol Protocol, count int) ([]*Port, error) {
 	ports := make([]*Port, count)
 	for i := 0; i < count; i++ {
@@ -27,6 +54,7 @@ func GetFreePorts(address string, protocol Protocol, count int) ([]*Port, error)
 	return ports, nil
 }
 
+// GetFreePortInRange for protocol within a port range
 func GetFreePortInRange(address string, protocol Protocol, minPort, maxPort int) (*Port, error) {
 	if minPort > maxPort {
 		return nil, errors.New("invalid interval")
@@ -39,6 +67,7 @@ func GetFreePortInRange(address string, protocol Protocol, minPort, maxPort int)
 	return nil, fmt.Errorf("couldn't find free ports between %d and %d", minPort, maxPort)
 }
 
+// GetFreeTCPPort gets a free tcp port on address
 func GetFreeTCPPort(address string) (*Port, error) {
 	addr, err := net.ResolveTCPAddr("tcp", address+":0")
 	if err != nil {
@@ -60,6 +89,7 @@ func GetFreeTCPPort(address string) (*Port, error) {
 	return &Port{Address: l.Addr().String(), Port: port, Protocol: TCP}, nil
 }
 
+// GetPort for protocol is the specific port is free
 func GetPort(protocol Protocol, address string, port int) (*Port, error) {
 	hostport := net.JoinHostPort(address, fmt.Sprint(port))
 	switch protocol {
@@ -88,6 +118,7 @@ func GetPort(protocol Protocol, address string, port int) (*Port, error) {
 	}
 }
 
+// GetFreeUDPPort gets a free udp port on address
 func GetFreeUDPPort(address string) (*Port, error) {
 	addr, err := net.ResolveUDPAddr("udp", address+":0")
 	if err != nil {
@@ -109,6 +140,7 @@ func GetFreeUDPPort(address string) (*Port, error) {
 	return &Port{Address: l.LocalAddr().String(), Port: port, Protocol: UDP}, nil
 }
 
+// MustGetFreeTCPPort get a free tcp port for address or panic
 func MustGetFreeTCPPort(address string) *Port {
 	port, err := GetFreeTCPPort(address)
 	if err != nil {
@@ -117,6 +149,7 @@ func MustGetFreeTCPPort(address string) *Port {
 	return port
 }
 
+// MustGetFreeUDPPort get a free udp port for address or panic
 func MustGetFreeUDPPort(address string) *Port {
 	port, err := GetFreeUDPPort(address)
 	if err != nil {

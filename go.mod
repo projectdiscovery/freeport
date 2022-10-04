@@ -1,4 +1,4 @@
-module github.com/projectdiscovery/stringsutil
+module github.com/projectdiscovery/freeport
 
 go 1.14
 

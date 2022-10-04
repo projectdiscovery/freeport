@@ -1,5 +1,6 @@
 package freeport
 
+// Protocol represents the supported protocol type
 type Protocol uint8
 
 const (
@@ -7,6 +8,7 @@ const (
 	UDP
 )
 
+// Port obtained from the kernel
 type Port struct {
 	Address  string
 	Port     int
