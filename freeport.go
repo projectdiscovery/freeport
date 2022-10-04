@@ -1,6 +1,7 @@
 package freeport
 
 import (
+	"errors"
 	"fmt"
 	"net"
 )
@@ -27,6 +28,9 @@ func GetFreePorts(address string, protocol Protocol, count int) ([]*Port, error)
 }
 
 func GetFreePortInRange(address string, protocol Protocol, minPort, maxPort int) (*Port, error) {
+	if minPort > maxPort {
+		return nil, errors.New("invalid interval")
+	}
 	for port := minPort; port <= maxPort; port++ {
 		if port, err := GetPort(protocol, address, port); err == nil {
 			return port, nil
@@ -57,31 +61,40 @@ func GetFreeTCPPort(address string) (*Port, error) {
 }
 
 func GetPort(protocol Protocol, address string, port int) (*Port, error) {
-	var listenProtocol string
 	hostport := net.JoinHostPort(address, fmt.Sprint(port))
 	switch protocol {
 	case UDP:
-		listenProtocol = "udp"
+		addr, err := net.ResolveUDPAddr("udp", hostport)
+		if err != nil {
+			return nil, err
+		}
+		l, err := net.ListenUDP("udp", addr)
+		if err != nil {
+			return nil, err
+		}
+		if err := l.Close(); err != nil {
+			return nil, err
+		}
+		return &Port{Address: address, Port: port, Protocol: UDP}, nil
 	default:
-		listenProtocol = "tcp"
+		l, err := net.Listen("tcp", hostport)
+		if err != nil {
+			return nil, err
+		}
+		if err := l.Close(); err != nil {
+			return nil, err
+		}
+		return &Port{Address: address, Port: port, Protocol: TCP}, nil
 	}
-	l, err := net.Listen(listenProtocol, hostport)
-	if err != nil {
-		return nil, err
-	}
-	if err := l.Close(); err != nil {
-		return nil, err
-	}
-	return &Port{Address: address, Port: port, Protocol: TCP}, nil
 }
 
 func GetFreeUDPPort(address string) (*Port, error) {
-	addr, err := net.ResolveUDPAddr("tcp", address+":0")
+	addr, err := net.ResolveUDPAddr("udp", address+":0")
 	if err != nil {
 		return nil, err
 	}
 
-	l, err := net.ListenUDP("tcp", addr)
+	l, err := net.ListenUDP("udp", addr)
 	if err != nil {
 		return nil, err
 	}
