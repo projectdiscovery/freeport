@@ -39,11 +39,11 @@ func main() {
 
 	fmt.Println("Multiple ports in range:")
 
-	tcpPortsInRange, err := freeport.GetFreePortInRange("127.0.0.1", freeport.TCP, 30000, 3100)
+	tcpPortsInRange, err := freeport.GetFreePortInRange("127.0.0.1", freeport.TCP, 10000, 20000)
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println("TCP port in range 30000-30100: ", tcpPortsInRange.Port)
+	fmt.Println("TCP port in range 10000-20000: ", tcpPortsInRange.Port)
 
 }
