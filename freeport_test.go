@@ -11,11 +11,13 @@ func TestGetFreePort(t *testing.T) {
 		port, err := GetFreePort("127.0.0.1", UDP)
 		require.Nil(t, err)
 		require.NotNil(t, port)
+		require.Equal(t, "127.0.0.1", port.Address)
 	})
 	t.Run("TCP Port", func(t *testing.T) {
 		port, err := GetFreePort("127.0.0.1", TCP)
 		require.Nil(t, err)
 		require.NotNil(t, port)
+		require.Equal(t, "127.0.0.1", port.Address)
 	})
 	t.Run("TCP Port on unknown address", func(t *testing.T) {
 		port, err := GetFreePort("1.2.3.4", TCP)
@@ -50,6 +52,7 @@ func TestGetFreePortInRange(t *testing.T) {
 		require.Nil(t, err)
 		require.NotNil(t, port)
 		require.True(t, min <= port.Port && port.Port <= max)
+		require.Equal(t, "127.0.0.1", port.Address)
 	})
 	t.Run("TCP in range", func(t *testing.T) {
 		min, max := 10000, 20000
@@ -57,6 +60,7 @@ func TestGetFreePortInRange(t *testing.T) {
 		require.Nil(t, err)
 		require.NotNil(t, port)
 		require.True(t, min <= port.Port && port.Port <= max)
+		require.Equal(t, "127.0.0.1", port.Address)
 	})
 	t.Run("Invalid Interval", func(t *testing.T) {
 		min, max := 20000, 10000
