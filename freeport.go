@@ -82,16 +82,14 @@ func GetFreeTCPPort(address string) (*Port, error) {
 		return nil, err
 	}
 	var port int
-	tcpAddrString := address
 	if tcpAddr, ok := l.Addr().(*net.TCPAddr); ok {
 		port = tcpAddr.Port
-		tcpAddrString = tcpAddr.IP.String()
 	}
 
 	// We could just use address as for GetPort, but this change
 	// honors spirit of original code in allowing the listen IP
 	// to change in some way
-	return &Port{Address: tcpAddrString, Port: port, Protocol: TCP}, nil
+	return &Port{Address: address, Port: port, Protocol: TCP, NetListenAddress: l.Addr().String()}, nil
 }
 
 // GetPort for protocol is the specific port is free
@@ -110,7 +108,7 @@ func GetPort(protocol Protocol, address string, port int) (*Port, error) {
 		if err := l.Close(); err != nil {
 			return nil, err
 		}
-		return &Port{Address: address, Port: port, Protocol: UDP}, nil
+		return &Port{Address: address, Port: port, Protocol: UDP, NetListenAddress: l.LocalAddr().String()}, nil
 	default:
 		l, err := net.Listen("tcp", hostport)
 		if err != nil {
@@ -119,7 +117,8 @@ func GetPort(protocol Protocol, address string, port int) (*Port, error) {
 		if err := l.Close(); err != nil {
 			return nil, err
 		}
-		return &Port{Address: address, Port: port, Protocol: TCP}, nil
+		return &Port{Address: address, Port: port, Protocol: TCP, NetListenAddress: l.Addr().String()}, nil
+
 	}
 }
 
@@ -138,15 +137,13 @@ func GetFreeUDPPort(address string) (*Port, error) {
 		return nil, err
 	}
 	var port int
-	addrString := address
 	if udpAddr, ok := l.LocalAddr().(*net.UDPAddr); ok {
 		port = udpAddr.Port
-		addrString = udpAddr.IP.String()
 	}
 
 	// This should always be equal to address, but if for some reason the OS remaps
 	// this honors the returned address
-	return &Port{Address: addrString, Port: port, Protocol: UDP}, nil
+	return &Port{Address: address, Port: port, Protocol: UDP, NetListenAddress: l.LocalAddr().String()}, nil
 }
 
 // MustGetFreeTCPPort get a free tcp port for address or panic
